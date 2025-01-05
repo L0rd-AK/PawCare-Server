@@ -1,8 +1,8 @@
+// const jwt = require("jsonwebtoken");
+// const cookieParser=require('cookie-parser')
 const express = require("express");
 const cors = require("cors");
-// const jwt = require("jsonwebtoken");
 const SSLCommerzPayment = require("sslcommerz-lts");
-// const cookieParser=require('cookie-parser')
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
@@ -11,12 +11,12 @@ const port = process.env.PORT || 5001;
 // ==========middleware===========
 app.use(
   cors({
-    origin: ["http://localhost:5173"], 
+    origin: ["http://localhost:5173"],
     credentials: true,
   })
 );
 app.use(express.json());
-const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yzoz4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yzoz4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rjhcvof.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // ssl commerz cresentials
@@ -33,7 +33,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-async function run(){
+async function run() {
   try {
     const products = client.db("PawCare").collection("products");
     const cart = client.db("PawCare").collection("cart");
@@ -169,14 +169,14 @@ async function run(){
       const email = req.params.email;
       const query = { email: email };
       const result = await cart.find(query).toArray();
-      
+
       res.send(result);
-      
+
     });
     // delete items from cart
     app.delete("/cart/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id)  };
+      const query = { _id: new ObjectId(id) };
       const result = await cart.deleteOne(query);
       console.log(result)
       res.send(result);
@@ -212,16 +212,23 @@ async function run(){
 
     // get user info
     app.get("/admin/users", async (req, res) => {
-   
+
       const result = await users.find().toArray();
       res.send(result);
     });
     // get user info
     app.get("/users/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email: email };
-      const result = await users.findOne(query);
-      res.send(result);
+      try {
+        const email = req.params.email;
+        const query = { email: email };
+        const result = await users.findOne(query);
+        if (!result) {
+          return res.status(404).send({ message: 'User not found' });
+        }
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: 'Error finding user' });
+      }
     });
 
     // for payment
@@ -267,7 +274,7 @@ async function run(){
         cancel_url: "http://localhost:3030/cancel",
         ipn_url: "http://localhost:3030/ipn",
         shipping_method: "Courier",
-        product_name: "Course",
+        product_name: "Food",
         product_category: "Mix category",
         product_profile: "general",
         cus_name: "cartItem?.userName",
@@ -327,12 +334,12 @@ async function run(){
         await cart.deleteMany(query);
       });
       app.post("/user/payment/fail/:tranId", async (req, res) => {
-   
-       
-          res.redirect(
-            `http://localhost:5173/payment-failed/${req.params.tranId}`
-          );
-        
+
+
+        res.redirect(
+          `http://localhost:5173/payment-failed/${req.params.tranId}`
+        );
+
       });
     });
 
@@ -349,9 +356,9 @@ async function run(){
       } else {
         res.send({ admin: false });
       }
-   
+
     });
-// delete a user
+    // delete a user
     app.delete("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -384,4 +391,27 @@ app.get("/", (req, res) => {
 });
 app.listen(port, () => {
   console.log(`backend is running on port ${port}`);
+});
+
+
+app.use("*", (req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  error.status = 404;
+  res.status(404).json({
+    success: false,
+    message: 'Resource not found',
+    path: req.originalUrl
+  });
+  next(error);
+});
+
+
+// Global error handler middleware
+app.use((err, req, res, next) => {
+  console.error('Global error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
 });
