@@ -41,7 +41,7 @@ async function run() {
     const medicine = client.db("PawCare").collection("medicine");
     const adopt = client.db("PawCare").collection("adopt");
     const doctors = client.db("PawCare").collection("doctors");
-     // =================== adopt crud operations =======================
+     // =================== adopt crud operations ========================
      app.post("/adopt", async (req, res) => {
       const course = req.body;
       const result = await adopt.insertOne(course);
