@@ -6,7 +6,7 @@ const SSLCommerzPayment = require("sslcommerz-lts");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5001;
 
 // ==========middleware===========
 app.use(
@@ -40,6 +40,7 @@ async function run(){
     const users = client.db("PawCare").collection("users");
     const medicine = client.db("PawCare").collection("medicine");
     const adopt = client.db("PawCare").collection("adopt");
+    const doctors = client.db("PawCare").collection("doctors");
      // =================== adopt crud operations =======================
      app.post("/adopt", async (req, res) => {
       const course = req.body;
@@ -56,17 +57,51 @@ async function run(){
       const result = await adopt.findOne(query);
       res.send(result);
     });
+     // =================== doctors crud operations ========================
+     app.post("/doctors", async (req, res) => {
+      const course = req.body;
+      const result = await doctors.insertOne(course);
+      res.send(result);
+    });
+    app.get("/doctors", async (req, res) => {
+      const result = await doctors.find().toArray();
+      res.send(result);
+    });
+    app.get("/doctors/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await doctors.findOne(query);
+      res.send(result);
+    });
+     // =================== apointments crud operations ========================
+     app.post("/apointments", async (req, res) => {
+      const course = req.body;
+      const result = await apointments.insertOne(course);
+      res.send(result);
+    });
+    app.get("/apointments", async (req, res) => {
+      const result = await apointments.find().toArray();
+      res.send(result);
+    });
+    app.get("/apointments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await apointments.findOne(query);
+      res.send(result);
+    });
     // =================== products crud operations ======================
-    app.post("/all-products", async (req, res) => {
+    app.post("/products", async (req, res) => {
       const course = req.body;
       const result = await products.insertOne(course);
       res.send(result);
     });
-    app.get("/all-products", async (req, res) => {
+    app.get("/products", async (req, res) => {
+      console.log("all products hit")
       const result = await products.find().toArray();
+      console.log(result)
       res.send(result);
     });
-    app.get("/all-products/:id", async (req, res) => {
+    app.get("/products/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await products.findOne(query);
@@ -78,7 +113,7 @@ async function run(){
       const result = await products.find(query).toArray();
       res.send(result);
     });
-    app.get("/all-products/:email", async (req, res) => {
+    app.get("/products/:email", async (req, res) => {
    
       const email = req.params.email;
       const query = { email: email };
@@ -163,9 +198,16 @@ async function run(){
     });
     // post user info
     app.post("/users", async (req, res) => {
-      const user = req.body;
-      const result = await users.insertOne(user);
-      res.send(result);
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await users.findOne(query);
+      if(result.insertedId){
+        return res.send({message:"already exists"})
+      }else{
+        const user = req.body;
+        const result = await users.insertOne(user);
+        res.send(result);
+      }
     });
 
     // get user info
