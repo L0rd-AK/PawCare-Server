@@ -41,8 +41,8 @@ async function run() {
     const medicine = client.db("PawCare").collection("medicine");
     const adopt = client.db("PawCare").collection("adopt");
     const doctors = client.db("PawCare").collection("doctors");
-     // =================== adopt crud operations ========================
-     app.post("/adopt", async (req, res) => {
+    // =================== adopt crud operations ========================
+    app.post("/adopt", async (req, res) => {
       const course = req.body;
       const result = await adopt.insertOne(course);
       res.send(result);
@@ -57,8 +57,26 @@ async function run() {
       const result = await adopt.findOne(query);
       res.send(result);
     });
-     // =================== doctors crud operations ========================
-     app.post("/doctors", async (req, res) => {
+    app.put("/adopt/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        } 
+      };
+      const result = await adopt.updateOne(query, update);
+      res.send(result);
+    })
+    app.delete("/adopt/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await adopt.deleteOne(query);
+      res.send(result);
+    })
+    // =================== doctors crud operations ========================
+    app.post("/doctors", async (req, res) => {
       const course = req.body;
       const result = await doctors.insertOne(course);
       res.send(result);
@@ -73,8 +91,8 @@ async function run() {
       const result = await doctors.findOne(query);
       res.send(result);
     });
-     // =================== apointments crud operations ========================
-     app.post("/apointments", async (req, res) => {
+    // =================== apointments crud operations ========================
+    app.post("/apointments", async (req, res) => {
       const course = req.body;
       const result = await apointments.insertOne(course);
       res.send(result);
@@ -114,12 +132,36 @@ async function run() {
       res.send(result);
     });
     app.get("/products/:email", async (req, res) => {
-   
+
       const email = req.params.email;
       const query = { email: email };
       const result = await products.find(query).toArray();
       res.send(result);
     });
+    app.put("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          // title: course.title,
+          // description: course.description,
+          // price: course.price,
+          // image: course.image,
+          // category: course.category,
+          ...course
+        }
+      };
+      console.log(id, course)
+      const result = await products.updateOne(query, update, { upsert: true });
+      res.send(result);
+    })
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await products.deleteOne(query);
+      res.send(result);
+    })
     // get all medicine added by individual user
     app.get("/medicine/:email", async (req, res) => {
       const email = req.params.email;
@@ -149,7 +191,26 @@ async function run() {
       const result = await medicine.find().toArray();
       res.send(result);
     });
-
+    // delete a medicine
+    app.delete("/medicine/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await medicine.deleteOne(query);
+      res.send(result);
+    })
+    // update a medicine
+    app.put("/medicine/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        }
+      };
+      const result = await medicine.updateOne(query, update);
+      res.send(result);
+    })
     // cart post operation
     app.post("/cart", async (req, res) => {
       const item = req.body;
@@ -201,9 +262,9 @@ async function run() {
       const email = req.params.email;
       const query = { email: email };
       const result = await users.findOne(query);
-      if(result.insertedId){
-        return res.send({message:"already exists"})
-      }else{
+      if (result.insertedId) {
+        return res.send({ message: "already exists" })
+      } else {
         const user = req.body;
         const result = await users.insertOne(user);
         res.send(result);
