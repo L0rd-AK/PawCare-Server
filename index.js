@@ -44,9 +44,7 @@ async function run() {
     const apointments = client.db("PawCare").collection("apointments");
     const applications = client.db("PawCare").collection("applications");
     // =================== adopt crud operations ========================
-    // app.post("/adopt", async (req, res) => {
-    //   const course = req.body;
-    //   const result = await adopt.insertOne(course);
+
     app.post("/adopt", async (req, res) => {
       const pet = req.body;
       const result = await adopt.insertOne(pet);
@@ -80,10 +78,6 @@ async function run() {
       const result = await adopt.deleteOne(query);
       res.send(result);
     })
-    // // =================== doctors crud operations ========================
-    // app.post("/doctors", async (req, res) => {
-    //   const course = req.body;
-    //   const result = await doctors.insertOne(course);
     // =================== doctors crud operations ========================
     app.post("/doctors", async (req, res) => {
       const doc = req.body;
@@ -100,10 +94,7 @@ async function run() {
       const result = await doctors.findOne(query);
       res.send(result);
     });
-    // =================== apointments crud operations ========================
-    // app.post("/apointments", async (req, res) => {
-    //   const course = req.body;
-    //   const result = await apointments.insertOne(course);
+
     //  // =================== applications crud operations ========================
     app.post("/applications", async (req, res) => {
       const doc = req.body;
@@ -116,10 +107,30 @@ async function run() {
     });
     app.get("/applications/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { email: id };
-      const result = await applications.find().toArray();
+      const query = { petId: id };
+      const result = await applications.find(query).toArray();
       res.send(result);
     });
+    app.put("/applications/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        }
+      }
+      const result = await applications.updateOne(query, update);
+      res.send(result);
+
+
+    });
+    app.delete("/applications/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await applications.deleteOne(query);
+      res.send(result);
+    })
     // =================== apointments crud operations ========================
     app.post("/apointments", async (req, res) => {
       const apointment = req.body;
@@ -295,7 +306,8 @@ async function run() {
       if (result.insertedId) {
         return res.send({ message: "already exists" })
       } else {
-        const user = req.body;
+        const user = { ...req.body, createdAt: new Date(), updatedAt: new Date(), status: "active" };
+
         const result = await users.insertOne(user);
         res.send(result);
       }
@@ -315,6 +327,26 @@ async function run() {
       res.send(result);
     });
 
+    // update user info
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const query = { email: email };
+      const update = {
+        $set: {
+          ...user
+        }
+      };
+      const result = await users.updateOne(query, update);
+      res.send(result);
+    })
+    // delete user info
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await users.deleteOne(query);
+      res.send(result);
+    })
     // for payment
     app.post("/payment", async (req, res) => {
       const tran_id = new ObjectId().toString();
