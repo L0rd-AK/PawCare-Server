@@ -112,6 +112,12 @@ async function run() {
       const result = await applications.find(query).toArray();
       res.send(result);
     });
+    app.get("/applications/user/:email", async (req, res) => {
+      const id = req.params.email;
+      const query = { email: id };
+      const result = await applications.find(query).toArray();
+      res.send(result);
+    });
     app.put("/applications/:id", async (req, res) => {
       const id = req.params.id;
       const data = req.body;
@@ -159,6 +165,13 @@ async function run() {
         }
       }
       const result = await apointments.updateOne(query, update);
+      res.send(result);
+    })
+
+    app.delete("/apointments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await apointments.deleteOne(query);
       res.send(result);
     })
     // =================== products crud operations ======================
@@ -332,6 +345,7 @@ async function run() {
       const query = { email: email };
       const result = await users.findOne(query);
       if (result) {
+
         return res.send({ message: "already exists" })
       } else {
         const user = { ...req.body, createdAt: new Date(), updatedAt: new Date(), status: "active" };
@@ -375,117 +389,6 @@ async function run() {
       res.send(result);
     })
     // for payment
-    // app.post("/payment", async (req, res) => {
-    //   const tran_id = new ObjectId().toString();
-    //   const id = new ObjectId().toString();
-
-    //   const paymentInfo = req?.body;
-
-    //   const email = paymentInfo?.userEmail;
-    //   const products = paymentInfo?.products; // No need to spread here, assuming products is an array=
-
-    //   // New properties to add to each data
-    //   const newProperties = {
-    //     purchase: false,
-    //     payment: false,
-    //   };
-
-    //   // Destructure the original array and add new properties to each object
-    //   const modifiedArray = products?.map((obj) => {
-    //     // Destructure the object and add new properties
-    //     return {
-    //       ...obj, // Spread the original properties
-    //       ...newProperties, // Add new properties
-    //     };
-    //   });
-
-    //   // Assuming id is defined somewhere else
-    //   const result = await users.updateOne(
-    //     { email: email },
-    //     {
-    //       $addToSet: { // Use $addToSet to add unique elements to an array
-    //         purchaseList: { $each: modifiedArray }
-    //       }
-    //     }
-    //   );
-
-    //   const data = {
-    //     total_amount: paymentInfo?.total_bill,
-    //     currency: "BDT",
-    //     tran_id: tran_id,
-    //     success_url: `${process?.env?.serverURL}/user/payment/success/${tran_id}?email=${email}`,
-    //     fail_url: `${process?.env?.serverURL}/user/payment/fail/${tran_id}?email=${email}`,
-    //     cancel_url: "http://localhost:3030/cancel",
-    //     ipn_url: "http://localhost:3030/ipn",
-    //     shipping_method: "Courier",
-    //     product_name: "Product Name",
-    //     product_category: "Mix category",
-    //     product_profile: "general",
-    //     cus_name: "cartItem?.userName",
-    //     cus_email: "cartItem?.userEmail",
-    //     cus_add1: "Dhaka",
-    //     cus_add2: "Dhaka",
-    //     cus_city: "Dhaka",
-    //     cus_state: "Dhaka",
-    //     cus_postcode: "1000",
-    //     cus_country: "Bangladesh",
-    //     cus_phone: "01711111111",
-    //     cus_fax: "01711111111",
-    //     ship_name: "Customer Name",
-    //     ship_add1: "Dhaka",
-    //     ship_add2: "Dhaka",
-    //     ship_city: "Dhaka",
-    //     ship_state: "Dhaka",
-    //     ship_postcode: 1000,
-    //     ship_country: "Bangladesh",
-    //   };
-    //   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
-    //   sslcz.init(data).then((apiResponse) => {
-    //     // Redirect the user to payment gateway
-    //     let GatewayPageURL = apiResponse.GatewayPageURL;
-    //     res.send({ url: GatewayPageURL });
-    //     console.log("Redirecting to: ", GatewayPageURL);
-    //   });
-
-    //   app.post("/user/payment/success/:tranId", async (req, res) => {
-    //     const result = await payment.updateOne(
-    //       {
-    //         email: req.query.email,
-    //         purchaseList: {
-    //           $elemMatch: {
-    //             purchase: false,
-    //             payment: false,
-    //           },
-    //         },
-    //       },
-    //       {
-    //         $set: {
-    //           "purchaseList.$.purchase": true,
-    //           "purchaseList.$.payment": true,
-    //           transactionId: req.params.tranId,
-    //         },
-    //       }
-    //     );
-    //     if (result.modifiedCount > 0) {
-    //       res.redirect(
-    //         `http://localhost:5173/payment-complete/${req.params.tranId}`
-    //       );
-    //     }
-
-    //     const cartIds = await cart.find().toArray();
-    //     const ids = cartIds.map((x) => x._id);
-    //     const query = { _id: { $in: ids } };
-    //     await cart.deleteMany(query);
-    //   });
-    //   app.post("/user/payment/fail/:tranId", async (req, res) => {
-
-
-    //     res.redirect(
-    //       `http://localhost:5173/payment-failed/${req.params.tranId}`
-    //     );
-
-    //   });
-    // });
     app.post("/payment", async (req, res) => {
       const tran_id = new ObjectId().toString();
       const id = new ObjectId().toString();
