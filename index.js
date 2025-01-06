@@ -43,6 +43,7 @@ async function run() {
     const doctors = client.db("PawCare").collection("doctors");
     const apointments = client.db("PawCare").collection("apointments");
     const applications = client.db("PawCare").collection("applications");
+    const orders = client.db("PawCare").collection("orders");
     // =================== adopt crud operations ========================
 
     app.post("/adopt", async (req, res) => {
@@ -62,11 +63,11 @@ async function run() {
     });
     app.put("/adopt/:id", async (req, res) => {
       const id = req.params.id;
-      const course = req.body;
+      const data = req.body;
       const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
-          ...course
+          ...data
         }
       };
       const result = await adopt.updateOne(query, update);
@@ -113,11 +114,11 @@ async function run() {
     });
     app.put("/applications/:id", async (req, res) => {
       const id = req.params.id;
-      const course = req.body;
+      const data = req.body;
       const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
-          ...course
+          ...data
         }
       }
       const result = await applications.updateOne(query, update);
@@ -148,6 +149,18 @@ async function run() {
       const result = await apointments.find(query).toArray();
       res.send(result);
     });
+    app.put("/apointments/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...data
+        }
+      }
+      const result = await apointments.updateOne(query, update);
+      res.send(result);
+    })
     // =================== products crud operations ======================
     app.post("/products", async (req, res) => {
       const product = req.body;
@@ -181,19 +194,19 @@ async function run() {
     });
     app.put("/products/:id", async (req, res) => {
       const id = req.params.id;
-      const course = req.body;
+      const data = req.body;
       const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
-          // title: course.title,
-          // description: course.description,
-          // price: course.price,
-          // image: course.image,
-          // category: course.category,
-          ...course
+          // title: data.title,
+          // description: data.description,
+          // price: data.price,
+          // image: data.image,
+          // category: data.category,
+          ...data
         }
       };
-      console.log(id, course)
+      console.log(id, data)
       const result = await products.updateOne(query, update, { upsert: true });
       res.send(result);
     })
@@ -211,7 +224,7 @@ async function run() {
       console.log(result)
       res.send(result);
     });
-    // post a course
+    // post a data
     app.post("/medicine", async (req, res) => {
       const medicine = req.body;
       const result = await medicine.insertOne(medicine);
@@ -219,7 +232,7 @@ async function run() {
       res.send(result);
     });
 
-    // get a specific course=
+    // get a specific data=
     app.get("/users/medicine/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -242,11 +255,11 @@ async function run() {
     // update a medicine
     app.put("/medicine/:id", async (req, res) => {
       const id = req.params.id;
-      const course = req.body;
+      const data = req.body;
       const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
-          ...course
+          ...data
         }
       };
       const result = await medicine.updateOne(query, update);
@@ -256,13 +269,16 @@ async function run() {
     app.post("/cart", async (req, res) => {
       const item = req.body;
       const { _id, ...rest } = item;
-      const query = { _id: new ObjectId(_id) };
+      const query = { productId: _id, email: rest.email };
       const isExist = await cart.findOne(query);
       if (isExist) {
         return res.send({ message: "already exists" });
       }
-
-      const result = await cart.insertOne(rest);
+      const info = {
+        productId: _id,
+        ...rest,
+      }
+      const result = await cart.insertOne(info);
       res.send(result);
     });
 
@@ -283,8 +299,20 @@ async function run() {
       console.log(result)
       res.send(result);
     });
-
-    // delete a course
+    // app
+    app.put("/cart/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...data
+        }
+      };
+      const result = await cart.updateOne(query, update);
+      res.send(result);
+    })
+    // delete a data
     app.delete("/admin/medicine/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -300,14 +328,13 @@ async function run() {
     });
     // post user info
     app.post("/users", async (req, res) => {
-      const email = req.params.email;
+      const email = req.body.email;
       const query = { email: email };
       const result = await users.findOne(query);
-      if (result.insertedId) {
+      if (result) {
         return res.send({ message: "already exists" })
       } else {
         const user = { ...req.body, createdAt: new Date(), updatedAt: new Date(), status: "active" };
-
         const result = await users.insertOne(user);
         res.send(result);
       }
@@ -348,53 +375,142 @@ async function run() {
       res.send(result);
     })
     // for payment
+    // app.post("/payment", async (req, res) => {
+    //   const tran_id = new ObjectId().toString();
+    //   const id = new ObjectId().toString();
+
+    //   const paymentInfo = req?.body;
+
+    //   const email = paymentInfo?.userEmail;
+    //   const products = paymentInfo?.products; // No need to spread here, assuming products is an array=
+
+    //   // New properties to add to each data
+    //   const newProperties = {
+    //     purchase: false,
+    //     payment: false,
+    //   };
+
+    //   // Destructure the original array and add new properties to each object
+    //   const modifiedArray = products?.map((obj) => {
+    //     // Destructure the object and add new properties
+    //     return {
+    //       ...obj, // Spread the original properties
+    //       ...newProperties, // Add new properties
+    //     };
+    //   });
+
+    //   // Assuming id is defined somewhere else
+    //   const result = await users.updateOne(
+    //     { email: email },
+    //     {
+    //       $addToSet: { // Use $addToSet to add unique elements to an array
+    //         purchaseList: { $each: modifiedArray }
+    //       }
+    //     }
+    //   );
+
+    //   const data = {
+    //     total_amount: paymentInfo?.total_bill,
+    //     currency: "BDT",
+    //     tran_id: tran_id,
+    //     success_url: `${process?.env?.serverURL}/user/payment/success/${tran_id}?email=${email}`,
+    //     fail_url: `${process?.env?.serverURL}/user/payment/fail/${tran_id}?email=${email}`,
+    //     cancel_url: "http://localhost:3030/cancel",
+    //     ipn_url: "http://localhost:3030/ipn",
+    //     shipping_method: "Courier",
+    //     product_name: "Product Name",
+    //     product_category: "Mix category",
+    //     product_profile: "general",
+    //     cus_name: "cartItem?.userName",
+    //     cus_email: "cartItem?.userEmail",
+    //     cus_add1: "Dhaka",
+    //     cus_add2: "Dhaka",
+    //     cus_city: "Dhaka",
+    //     cus_state: "Dhaka",
+    //     cus_postcode: "1000",
+    //     cus_country: "Bangladesh",
+    //     cus_phone: "01711111111",
+    //     cus_fax: "01711111111",
+    //     ship_name: "Customer Name",
+    //     ship_add1: "Dhaka",
+    //     ship_add2: "Dhaka",
+    //     ship_city: "Dhaka",
+    //     ship_state: "Dhaka",
+    //     ship_postcode: 1000,
+    //     ship_country: "Bangladesh",
+    //   };
+    //   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+    //   sslcz.init(data).then((apiResponse) => {
+    //     // Redirect the user to payment gateway
+    //     let GatewayPageURL = apiResponse.GatewayPageURL;
+    //     res.send({ url: GatewayPageURL });
+    //     console.log("Redirecting to: ", GatewayPageURL);
+    //   });
+
+    //   app.post("/user/payment/success/:tranId", async (req, res) => {
+    //     const result = await payment.updateOne(
+    //       {
+    //         email: req.query.email,
+    //         purchaseList: {
+    //           $elemMatch: {
+    //             purchase: false,
+    //             payment: false,
+    //           },
+    //         },
+    //       },
+    //       {
+    //         $set: {
+    //           "purchaseList.$.purchase": true,
+    //           "purchaseList.$.payment": true,
+    //           transactionId: req.params.tranId,
+    //         },
+    //       }
+    //     );
+    //     if (result.modifiedCount > 0) {
+    //       res.redirect(
+    //         `http://localhost:5173/payment-complete/${req.params.tranId}`
+    //       );
+    //     }
+
+    //     const cartIds = await cart.find().toArray();
+    //     const ids = cartIds.map((x) => x._id);
+    //     const query = { _id: { $in: ids } };
+    //     await cart.deleteMany(query);
+    //   });
+    //   app.post("/user/payment/fail/:tranId", async (req, res) => {
+
+
+    //     res.redirect(
+    //       `http://localhost:5173/payment-failed/${req.params.tranId}`
+    //     );
+
+    //   });
+    // });
     app.post("/payment", async (req, res) => {
       const tran_id = new ObjectId().toString();
       const id = new ObjectId().toString();
 
       const cartItem = req.body;
-      const email = cartItem.userEmail;
-      const medicine = cartItem.medicine; // No need to spread here, assuming medicine is an array=
-
-      // New properties to add to each course
-      const newProperties = {
-        purchase: false,
-        payment: false,
+      const info = {
+        ...cartItem,
+        code: id,
       };
-
-      // Destructure the original array and add new properties to each object
-      const modifiedArray = medicine?.map((obj) => {
-        // Destructure the object and add new properties
-        return {
-          ...obj, // Spread the original properties
-          ...newProperties, // Add new properties
-        };
-      });
-
-      // Assuming id is defined somewhere else
-      const result = await users.updateOne(
-        { email: email },
-        {
-          $addToSet: { // Use $addToSet to add unique elements to an array
-            purchaseList: { $each: modifiedArray }
-          }
-        }
-      );
+      await orders.insertOne(info);
 
       const data = {
         total_amount: cartItem?.total_bill,
         currency: "BDT",
         tran_id: tran_id,
-        success_url: `http://localhost:5000/user/payment/success/${tran_id}?email=${email}`,
-        fail_url: `http://localhost:5000/user/payment/fail/${tran_id}?email=${email}`,
+        success_url: `${process.env.serverURL}/api/v1/user/payment/success/${tran_id}?code=${id}`,
+        fail_url: `${process.env.serverURL}/api/v1/user/payment/fail/${tran_id}?code=${id}`,
         cancel_url: "http://localhost:3030/cancel",
         ipn_url: "http://localhost:3030/ipn",
         shipping_method: "Courier",
-        product_name: "Course",
+        product_name: "combine food",
         product_category: "Mix category",
         product_profile: "general",
-        cus_name: "cartItem?.userName",
-        cus_email: "cartItem?.userEmail",
+        cus_name: cartItem?.userName,
+        cus_email: cartItem?.userEmail,
         cus_add1: "Dhaka",
         cus_add2: "Dhaka",
         cus_city: "Dhaka",
@@ -419,21 +535,12 @@ async function run() {
         console.log("Redirecting to: ", GatewayPageURL);
       });
 
-      app.post("/user/payment/success/:tranId", async (req, res) => {
-        const result = await users.updateOne(
-          {
-            email: req.query.email,
-            purchaseList: {
-              $elemMatch: {
-                purchase: false,
-                payment: false,
-              },
-            },
-          },
+      app.post("/api/v1/user/payment/success/:tranId", async (req, res) => {
+        const result = await orders.updateOne(
+          { code: req.query.code },
           {
             $set: {
-              "purchaseList.$.purchase": true,
-              "purchaseList.$.payment": true,
+              payment: "complete",
               transactionId: req.params.tranId,
             },
           }
@@ -449,16 +556,23 @@ async function run() {
         const query = { _id: { $in: ids } };
         await cart.deleteMany(query);
       });
-      app.post("/user/payment/fail/:tranId", async (req, res) => {
-
-
-        res.redirect(
-          `http://localhost:5173/payment-failed/${req.params.tranId}`
+      app.post("/api/v1/user/payment/fail/:tranId", async (req, res) => {
+        const result = await orders.updateOne(
+          { code: req.query.code },
+          {
+            $set: {
+              payment: "failed",
+              // transactionId: req.params.tranId
+            },
+          }
         );
-
+        if (result.modifiedCount > 0) {
+          res.redirect(
+            `http://localhost:5173/payment-failed/${req.params.tranId}`
+          );
+        }
       });
     });
-
     // checking whether a user admin or not 
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
