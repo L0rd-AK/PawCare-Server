@@ -59,7 +59,7 @@ async function run(){
       const result = await adopt.find().toArray();
       res.send(result);
     });
-     // =================== doctors crud operations ========================
+     // =================== doctors crud operations =========================
      app.post("/doctors", async (req, res) => {
       const doc = req.body;
       const result = await doctors.insertOne(doc);
@@ -91,6 +91,24 @@ async function run(){
       const result = await applications.find().toArray();
       res.send(result);
     });
+    app.put("/applications/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        }
+      };
+      const result = await applications.updateOne(query, update);
+      res.send(result);
+    })
+    app.delete("/applications/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await applications.deleteOne(query);
+      res.send(result);
+    })
      // =================== apointments crud operations ========================
      app.post("/apointments", async (req, res) => {
       const apointment = req.body;
@@ -108,6 +126,24 @@ async function run(){
       const result = await apointments.find(query).toArray();
       res.send(result);
     });
+    app.put("/apointments/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        }
+      };
+      const result = await apointments.updateOne(query, update);
+      res.send(result);
+    })
+    app.delete("/apointments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await apointments.deleteOne(query);
+      res.send(result);
+    })
     // =================== products crud operations ======================
     app.post("/products", async (req, res) => {
       const product = req.body;
@@ -220,7 +256,7 @@ async function run(){
       const email = req.params.email;
       const query = { email: email };
       const result = await users.findOne(query);
-      if(result.insertedId){
+      if(result?.insertedId){
         return res.send({message:"already exists"})
       }else{
         const user = req.body;
