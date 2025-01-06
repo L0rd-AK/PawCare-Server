@@ -11,12 +11,12 @@ const port = process.env.PORT || 5001;
 // ==========middleware===========
 app.use(
   cors({
-    origin: ["http://localhost:5173"], 
+    origin: ["http://localhost:5173"],
     credentials: true,
   })
 );
 app.use(express.json());
-const uri =`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yzoz4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yzoz4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rjhcvof.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // ssl commerz cresentials
@@ -33,7 +33,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-async function run(){
+async function run() {
   try {
     const products = client.db("PawCare").collection("products");
     const cart = client.db("PawCare").collection("cart");
@@ -43,8 +43,11 @@ async function run(){
     const doctors = client.db("PawCare").collection("doctors");
     const apointments = client.db("PawCare").collection("apointments");
     const applications = client.db("PawCare").collection("applications");
-     // =================== adopt crud operations ========================
-     app.post("/adopt", async (req, res) => {
+    // =================== adopt crud operations ========================
+    // app.post("/adopt", async (req, res) => {
+    //   const course = req.body;
+    //   const result = await adopt.insertOne(course);
+    app.post("/adopt", async (req, res) => {
       const pet = req.body;
       const result = await adopt.insertOne(pet);
       res.send(result);
@@ -59,8 +62,30 @@ async function run(){
       const result = await adopt.find().toArray();
       res.send(result);
     });
-     // =================== doctors crud operations ========================
-     app.post("/doctors", async (req, res) => {
+    app.put("/adopt/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        }
+      };
+      const result = await adopt.updateOne(query, update);
+      res.send(result);
+    })
+    app.delete("/adopt/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await adopt.deleteOne(query);
+      res.send(result);
+    })
+    // // =================== doctors crud operations ========================
+    // app.post("/doctors", async (req, res) => {
+    //   const course = req.body;
+    //   const result = await doctors.insertOne(course);
+    // =================== doctors crud operations ========================
+    app.post("/doctors", async (req, res) => {
       const doc = req.body;
       const result = await doctors.insertOne(doc);
       res.send(result);
@@ -75,8 +100,12 @@ async function run(){
       const result = await doctors.findOne(query);
       res.send(result);
     });
-     // =================== applications crud operations ========================
-     app.post("/applications", async (req, res) => {
+    // =================== apointments crud operations ========================
+    // app.post("/apointments", async (req, res) => {
+    //   const course = req.body;
+    //   const result = await apointments.insertOne(course);
+    //  // =================== applications crud operations ========================
+    app.post("/applications", async (req, res) => {
       const doc = req.body;
       const result = await applications.insertOne(doc);
       res.send(result);
@@ -91,8 +120,8 @@ async function run(){
       const result = await applications.find().toArray();
       res.send(result);
     });
-     // =================== apointments crud operations ========================
-     app.post("/apointments", async (req, res) => {
+    // =================== apointments crud operations ========================
+    app.post("/apointments", async (req, res) => {
       const apointment = req.body;
       const result = await apointments.insertOne(apointment);
       res.send(result);
@@ -133,12 +162,36 @@ async function run(){
       res.send(result);
     });
     app.get("/products/:email", async (req, res) => {
-   
+
       const email = req.params.email;
       const query = { email: email };
       const result = await products.find(query).toArray();
       res.send(result);
     });
+    app.put("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          // title: course.title,
+          // description: course.description,
+          // price: course.price,
+          // image: course.image,
+          // category: course.category,
+          ...course
+        }
+      };
+      console.log(id, course)
+      const result = await products.updateOne(query, update, { upsert: true });
+      res.send(result);
+    })
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await products.deleteOne(query);
+      res.send(result);
+    })
     // get all medicine added by individual user
     app.get("/medicine/:email", async (req, res) => {
       const email = req.params.email;
@@ -168,7 +221,26 @@ async function run(){
       const result = await medicine.find().toArray();
       res.send(result);
     });
-
+    // delete a medicine
+    app.delete("/medicine/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await medicine.deleteOne(query);
+      res.send(result);
+    })
+    // update a medicine
+    app.put("/medicine/:id", async (req, res) => {
+      const id = req.params.id;
+      const course = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          ...course
+        }
+      };
+      const result = await medicine.updateOne(query, update);
+      res.send(result);
+    })
     // cart post operation
     app.post("/cart", async (req, res) => {
       const item = req.body;
@@ -188,14 +260,14 @@ async function run(){
       const email = req.params.email;
       const query = { email: email };
       const result = await cart.find(query).toArray();
-      
+
       res.send(result);
-      
+
     });
     // delete items from cart
     app.delete("/cart/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id)  };
+      const query = { _id: new ObjectId(id) };
       const result = await cart.deleteOne(query);
       console.log(result)
       res.send(result);
@@ -220,9 +292,9 @@ async function run(){
       const email = req.params.email;
       const query = { email: email };
       const result = await users.findOne(query);
-      if(result.insertedId){
-        return res.send({message:"already exists"})
-      }else{
+      if (result.insertedId) {
+        return res.send({ message: "already exists" })
+      } else {
         const user = req.body;
         const result = await users.insertOne(user);
         res.send(result);
@@ -231,7 +303,7 @@ async function run(){
 
     // get user info
     app.get("/admin/users", async (req, res) => {
-   
+
       const result = await users.find().toArray();
       res.send(result);
     });
@@ -346,12 +418,12 @@ async function run(){
         await cart.deleteMany(query);
       });
       app.post("/user/payment/fail/:tranId", async (req, res) => {
-   
-       
-          res.redirect(
-            `http://localhost:5173/payment-failed/${req.params.tranId}`
-          );
-        
+
+
+        res.redirect(
+          `http://localhost:5173/payment-failed/${req.params.tranId}`
+        );
+
       });
     });
 
@@ -368,9 +440,9 @@ async function run(){
       } else {
         res.send({ admin: false });
       }
-   
+
     });
-// delete a user
+    // delete a user
     app.delete("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
