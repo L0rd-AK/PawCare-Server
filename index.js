@@ -111,6 +111,12 @@ async function run() {
       const result = await applications.find(query).toArray();
       res.send(result);
     });
+    app.get("/applications/user/:email", async (req, res) => {
+      const id = req.params.email;
+      const query = { email: id };
+      const result = await applications.find(query).toArray();
+      res.send(result);
+    });
     app.put("/applications/:id", async (req, res) => {
       const id = req.params.id;
       const course = req.body;
@@ -321,7 +327,7 @@ async function run() {
       const email = req.params.email;
       const query = { email: email };
       const result = await users.findOne(query);
-      if (result.insertedId) {
+      if (result?.insertedId) {
         return res.send({ message: "already exists" })
       } else {
         const user = { ...req.body, createdAt: new Date(), updatedAt: new Date(), status: "active" };
