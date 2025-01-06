@@ -1,8 +1,8 @@
-// const jwt = require("jsonwebtoken");
-// const cookieParser=require('cookie-parser')
 const express = require("express");
 const cors = require("cors");
+// const jwt = require("jsonwebtoken");
 const SSLCommerzPayment = require("sslcommerz-lts");
+// const cookieParser=require('cookie-parser')
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
@@ -24,7 +24,7 @@ const store_id = process.env.storeID;
 const store_passwd = process.env.storePasswd;
 const is_live = false; //true for live, false for sandbox 
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version==
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version===
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -41,10 +41,15 @@ async function run() {
     const medicine = client.db("PawCare").collection("medicine");
     const adopt = client.db("PawCare").collection("adopt");
     const doctors = client.db("PawCare").collection("doctors");
+    const apointments = client.db("PawCare").collection("apointments");
+    const applications = client.db("PawCare").collection("applications");
     // =================== adopt crud operations ========================
+    // app.post("/adopt", async (req, res) => {
+    //   const course = req.body;
+    //   const result = await adopt.insertOne(course);
     app.post("/adopt", async (req, res) => {
-      const course = req.body;
-      const result = await adopt.insertOne(course);
+      const pet = req.body;
+      const result = await adopt.insertOne(pet);
       res.send(result);
     });
     app.get("/adopt", async (req, res) => {
@@ -53,8 +58,8 @@ async function run() {
     });
     app.get("/adopt/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await adopt.findOne(query);
+      const query = { email: id };
+      const result = await adopt.find().toArray();
       res.send(result);
     });
     app.put("/adopt/:id", async (req, res) => {
@@ -64,7 +69,7 @@ async function run() {
       const update = {
         $set: {
           ...course
-        } 
+        }
       };
       const result = await adopt.updateOne(query, update);
       res.send(result);
@@ -75,10 +80,14 @@ async function run() {
       const result = await adopt.deleteOne(query);
       res.send(result);
     })
+    // // =================== doctors crud operations ========================
+    // app.post("/doctors", async (req, res) => {
+    //   const course = req.body;
+    //   const result = await doctors.insertOne(course);
     // =================== doctors crud operations ========================
     app.post("/doctors", async (req, res) => {
-      const course = req.body;
-      const result = await doctors.insertOne(course);
+      const doc = req.body;
+      const result = await doctors.insertOne(doc);
       res.send(result);
     });
     app.get("/doctors", async (req, res) => {
@@ -92,9 +101,29 @@ async function run() {
       res.send(result);
     });
     // =================== apointments crud operations ========================
+    // app.post("/apointments", async (req, res) => {
+    //   const course = req.body;
+    //   const result = await apointments.insertOne(course);
+    //  // =================== applications crud operations ========================
+    app.post("/applications", async (req, res) => {
+      const doc = req.body;
+      const result = await applications.insertOne(doc);
+      res.send(result);
+    });
+    app.get("/applications", async (req, res) => {
+      const result = await applications.find().toArray();
+      res.send(result);
+    });
+    app.get("/applications/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { email: id };
+      const result = await applications.find().toArray();
+      res.send(result);
+    });
+    // =================== apointments crud operations ========================
     app.post("/apointments", async (req, res) => {
-      const course = req.body;
-      const result = await apointments.insertOne(course);
+      const apointment = req.body;
+      const result = await apointments.insertOne(apointment);
       res.send(result);
     });
     app.get("/apointments", async (req, res) => {
@@ -103,14 +132,15 @@ async function run() {
     });
     app.get("/apointments/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await apointments.findOne(query);
+      console.log(id)
+      const query = { email: id };
+      const result = await apointments.find(query).toArray();
       res.send(result);
     });
     // =================== products crud operations ======================
     app.post("/products", async (req, res) => {
-      const course = req.body;
-      const result = await products.insertOne(course);
+      const product = req.body;
+      const result = await products.insertOne(product);
       res.send(result);
     });
     app.get("/products", async (req, res) => {
@@ -172,13 +202,13 @@ async function run() {
     });
     // post a course
     app.post("/medicine", async (req, res) => {
-      const course = req.body;
-      const result = await medicine.insertOne(course);
+      const medicine = req.body;
+      const result = await medicine.insertOne(medicine);
       console.log(result)
       res.send(result);
     });
 
-    // get a specific course
+    // get a specific course=
     app.get("/users/medicine/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -215,7 +245,7 @@ async function run() {
     app.post("/cart", async (req, res) => {
       const item = req.body;
       const { _id, ...rest } = item;
-      const query = { title: rest.title, email: rest.email };
+      const query = { _id: new ObjectId(_id) };
       const isExist = await cart.findOne(query);
       if (isExist) {
         return res.send({ message: "already exists" });
@@ -279,17 +309,10 @@ async function run() {
     });
     // get user info
     app.get("/users/:email", async (req, res) => {
-      try {
-        const email = req.params.email;
-        const query = { email: email };
-        const result = await users.findOne(query);
-        if (!result) {
-          return res.status(404).send({ message: 'User not found' });
-        }
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: 'Error finding user' });
-      }
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await users.findOne(query);
+      res.send(result);
     });
 
     // for payment
@@ -299,7 +322,7 @@ async function run() {
 
       const cartItem = req.body;
       const email = cartItem.userEmail;
-      const medicine = cartItem.medicine; // No need to spread here, assuming medicine is an array
+      const medicine = cartItem.medicine; // No need to spread here, assuming medicine is an array=
 
       // New properties to add to each course
       const newProperties = {
@@ -335,7 +358,7 @@ async function run() {
         cancel_url: "http://localhost:3030/cancel",
         ipn_url: "http://localhost:3030/ipn",
         shipping_method: "Courier",
-        product_name: "Food",
+        product_name: "Course",
         product_category: "Mix category",
         product_profile: "general",
         cus_name: "cartItem?.userName",
@@ -452,27 +475,4 @@ app.get("/", (req, res) => {
 });
 app.listen(port, () => {
   console.log(`backend is running on port ${port}`);
-});
-
-
-app.use("*", (req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  error.status = 404;
-  res.status(404).json({
-    success: false,
-    message: 'Resource not found',
-    path: req.originalUrl
-  });
-  next(error);
-});
-
-
-// Global error handler middleware
-app.use((err, req, res, next) => {
-  console.error('Global error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
 });
