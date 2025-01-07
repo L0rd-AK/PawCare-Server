@@ -150,7 +150,6 @@ async function run() {
     });
     app.get("/apointments/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id)
       const query = { email: id };
       const result = await apointments.find(query).toArray();
       res.send(result);
@@ -181,9 +180,8 @@ async function run() {
       res.send(result);
     });
     app.get("/products", async (req, res) => {
-      console.log("all products hit")
+
       const result = await products.find().toArray();
-      console.log(result)
       res.send(result);
     });
     app.get("/products/:id", async (req, res) => {
@@ -219,7 +217,7 @@ async function run() {
           ...data
         }
       };
-      console.log(id, data)
+   
       const result = await products.updateOne(query, update, { upsert: true });
       res.send(result);
     })
@@ -234,14 +232,13 @@ async function run() {
       const email = req.params.email;
       const query = { "author.author_email": email };
       const result = await medicine.find(query).toArray();
-      console.log(result)
+
       res.send(result);
     });
     // post a data
     app.post("/medicine", async (req, res) => {
       const medicine = req.body;
       const result = await medicine.insertOne(medicine);
-      console.log(result)
       res.send(result);
     });
 
@@ -309,7 +306,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await cart.deleteOne(query);
-      console.log(result)
+
       res.send(result);
     });
     // app
